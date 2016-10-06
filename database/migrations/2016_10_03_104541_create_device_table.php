@@ -15,7 +15,8 @@ class CreateDeviceTable extends Migration
     {
         Schema::create('devices', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('device_id')->unique();
+            $table->string('platform');
+            $table->string('device_id');
             $table->string('user_id');
             $table->boolean('is_banned')->default(false);
             $table->timestamps();

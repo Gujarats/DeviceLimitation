@@ -44,9 +44,9 @@ class PolicyLogin
         }
     }
 
-    public function isDeviceBanned($deviceId)
+    public function isDeviceBanned($device_id)
     {
-        $device = Device::where(['deviceId'=>$deviceId])->first();
+        $device = Device::where(['device_id'=>$device_id])->first();
         if($device){
             return $device->is_banned;
         }else{
@@ -55,9 +55,9 @@ class PolicyLogin
 
     }
 
-    public function isDeviceExistWithUser($deviceId,$userId)
+    public function isDeviceExistWithUser($device_id,$userId)
     {
-        $device = Device::where(['deviceId'=>$deviceId,'user_id'=>$userId])->first();
+        $device = Device::where(['device_id'=>$device_id,'user_id'=>$userId])->first();
         if($device){
             return true;
         }else{
@@ -65,22 +65,22 @@ class PolicyLogin
         }
     }
 
-    public function bannedDevice($user_id,$deviceId)
+    public function bannedDevice($user_id,$device_id)
     {
         $user = User::where(['name'=>$user_id])->first();
         $device = new Device();
         $device->user_id = $user->id;
-        $device->deviceId = $deviceId;
+        $device->device_id = $device_id;
         $device->is_banned = true;
         $device->save();
     }
 
-    public function isDeviceUsedBefore($user_id,$deviceId)
+    public function isDeviceUsedBefore($user_id,$device_id)
     {
         $user = User::where(['name'=>$user_id])->first();
         $devices = Device::where(['user_id'=>$user->id])->get();
         foreach ($devices as $device) {
-            if($device->deviceId == $deviceId){
+            if($device->device_id == $device_id){
                 return true;
                 break;
             }
@@ -105,29 +105,29 @@ class PolicyLogin
      * Note :  the banned device is strored in devices table
      **/
 
-    public function isLoginValid($userId,$deviceId,$userIdTable){
-        if($policyLogin->hasUserLoginToTwoDevices($userId,$deviceId)){
-            if($policyLogin->isDeviceUsedBefore($userId,$deviceId)){
+    public function isLoginValid($userId,$device_id,$userIdTable){
+        if($policyLogin->hasUserLoginToTwoDevices($userId,$device_id)){
+            if($policyLogin->isDeviceUsedBefore($userId,$device_id)){
                 // return ok response device not banned
                 return true;
             }else{
                 //save the device with banned status
-                $policyLogin->bannedDevice($userId,$deviceId);
+                $policyLogin->bannedDevice($userId,$device_id);
 
                 // return not ok response device banned
                 return false;
 
             }
-        }elseif($policyLogin->isUserHasMoreThanTwoDevices($userId,$deviceId)){
-            if(!$policyLogin->isDeviceExistWithUser($deviceId,$userIdTable)){
-                $policyLogin->bannedDevice($userId,$deviceId);
+        }elseif($policyLogin->isUserHasMoreThanTwoDevices($userId,$device_id)){
+            if(!$policyLogin->isDeviceExistWithUser($device_id,$userIdTable)){
+                $policyLogin->bannedDevice($userId,$device_id);
 
                 // return not ok response device banned
                 return false;
 
             }else{
                 //check device is banned or not
-                if(!$policyLogin->isDeviceBanned($deviceId)){
+                if(!$policyLogin->isDeviceBanned($device_id)){
                     // return ok response device not banned
                     return true;
                 }else{
@@ -139,10 +139,10 @@ class PolicyLogin
 
         }else{
 
-            if(!$policyLogin->isDeviceExistWithUser($deviceId,$userIdTable)){
+            if(!$policyLogin->isDeviceExistWithUser($device_id,$userIdTable)){
                 //create new device if not Exist
                 $device = new Device();
-                $device->deviceId = $deviceId;
+                $device->device_id = $device_id;
                 $device->user_id =$userIdTable;
                 $device->save();
             }
@@ -173,9 +173,10 @@ class PolicyLogin
 
         //retrive device or create new one if doesnt exist
         $params = [
-            'user_id' => $request->userId,
-            'deviceId' => $request->deviceId
+            'user_id' => $userId,
+            'device_id' => $device_id
         ];
+        
         $device = Device::where($params)->first();
 
         if (!$device) {

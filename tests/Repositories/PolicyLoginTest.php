@@ -4,6 +4,10 @@ use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 
+//repositories
+use App\Repositories\PolicyLogin;
+
+//model
 use App\User;
 use App\Device;
 
@@ -11,109 +15,104 @@ class PolicyLoginTest extends TestCase
 {
 
     use DatabaseTransactions;
-
-    public function testHasUserLoginToTwoDevicesTrue()
-    {
+    
+    public function testIsUserReachLimitDeviceFalse(){
+        
+        //dummy data
         $user = new User();
-        $user->name = 'userIdForTesting';
-        $user->device = 'android';
+        $user->name = 'testName';
+        $user->email = 'testName@gamil.com';
+        $user->password = 'secret';
         $user->save();
 
+        $policyLogin = new PolicyLogin();
+        $this->assertEquals(false,$policyLogin->isUserReachLimitDevice($user->id));
+    }
+    
+    public function testIsUserReachLimitDeviceFalse2(){
+
+        //dummy data
+        $user = new User();
+        $user->name = 'testName';
+        $user->email = 'testName@gamil.com';
+        $user->password = 'secret';
+        $user->save();
+        
+        //create dummy data user with 1 device
         $device = new Device();
-        $device->user_id=$user->id;
-        $device->deviceId='deviceIdForTesting';
+        $device->user_id = $user->id;
+        $device->device_id = 'testDeviceId1';
+        $device->platform = 'android';
         $device->save();
 
-
-        $device = new Device();
-        $device->user_id=$user->id;
-        $device->deviceId='deviceIdForTesting2';
-        $device->save();
-
-        $policyLogin = new PolicyLogin;
-        $this->assertEquals($policyLogin->hasUserLoginToTwoDevices('userIdForTesting'),true);
+        $policyLogin = new PolicyLogin();
+        $this->assertEquals(false,$policyLogin->isUserReachLimitDevice($user->id));
     }
 
-    public function testHasUserLoginToTwoDevicesFalse1()
-    {
-        $user = new User();
-        $user->name = 'userIdForTesting';
-        $user->device = 'android';
-        $user->save();
+    public function testIsUserReachLimitDeviceFalse3(){
 
+        //dummy data
+        $user = new User();
+        $user->name = 'testName';
+        $user->email = 'testName@gamil.com';
+        $user->password = 'secret';
+        $user->save();
+        
+        //create dummy data user with 2 devices
         $device = new Device();
-        $device->user_id=$user->id;
-        $device->deviceId='deviceIdForTesting';
+        $device->user_id = $user->id;
+        $device->device_id = 'testDeviceId1';
+        $device->platform = 'android';
+        $device->save();
+        
+        $device = new Device();
+        $device->user_id = $user->id;
+        $device->device_id = 'testDeviceId2';
+        $device->platform = 'android';
         $device->save();
 
-        $policyLogin = new PolicyLogin;
-        $this->assertEquals($policyLogin->hasUserLoginToTwoDevices('userIdForTesting'),false);
+        $policyLogin = new PolicyLogin();
+        $this->assertEquals(false,$policyLogin->isUserReachLimitDevice($user->id));
     }
 
-    public function testHasUserLoginToTwoDevicesFalse2()
-    {
+    public function testIsUserReachLimitDeviceTrue(){
+
+        //dummy data
         $user = new User();
-        $user->name = 'userIdForTesting';
-        $user->device = 'android';
+        $user->name = 'testName';
+        $user->email = 'testName@gamil.com';
+        $user->password = 'secret';
         $user->save();
-
+        
+        //create dummy data user with 3 devices
         $device = new Device();
-        $device->user_id=$user->id;
-        $device->deviceId='deviceIdForTesting';
+        $device->user_id = $user->id;
+        $device->platform = 'android';
+        $device->device_id = 'testDeviceId1';
         $device->save();
-
-
+        
         $device = new Device();
-        $device->user_id=$user->id;
-        $device->deviceId='deviceIdForTesting2';
-        $device->save();
-
-        $device = new Device();
-        $device->user_id=$user->id;
-        $device->deviceId='deviceIdForTesting3';
-        $device->save();
-
-        $policyLogin = new PolicyLogin;
-        $this->assertEquals($policyLogin->hasUserLoginToTwoDevices('userIdForTesting'),false);
-    }
-
-    public function testHasUserLoginToTwoDevicesFalse3()
-    {
-        $user = new User();
-        $user->name = 'userIdForTesting';
-        $user->device = 'android';
-        $user->save();
-
-        $device = new Device();
-        $device->user_id=$user->id;
-        $device->deviceId='deviceIdForTesting';
-        $device->save();
-
-
-        $device = new Device();
-        $device->user_id=$user->id;
-        $device->deviceId='deviceIdForTesting2';
+        $device->platform = 'android';
+        $device->user_id = $user->id;
+        $device->device_id = 'testDeviceId2';
         $device->save();
 
         $device = new Device();
-        $device->user_id=$user->id;
-        $device->deviceId='deviceIdForTesting3';
+        $device->platform = 'android';
+        $device->user_id = $user->id;
+        $device->device_id = 'testDeviceId3';
         $device->save();
 
-        $device = new Device();
-        $device->user_id=$user->id;
-        $device->deviceId='deviceIdForTesting4';
-        $device->save();
-
-        $policyLogin = new PolicyLogin;
-        $this->assertEquals($policyLogin->hasUserLoginToTwoDevices('userIdForTesting'),false);
+        $policyLogin = new PolicyLogin();
+        $this->assertEquals(true,$policyLogin->isUserReachLimitDevice($user->id));
     }
 
     public function testIsDeviceBannedTrue()
     {
         $device = new Device();
+        $device->platform = 'android';
         $device->user_id= 'testID';
-        $device->deviceId='deviceIdForTesting';
+        $device->device_id='deviceIdForTesting';
         $device->is_banned = true;
         $device->save();
 
@@ -124,8 +123,9 @@ class PolicyLoginTest extends TestCase
     public function testIsDeviceBannedFalse()
     {
         $device = new Device();
+        $device->platform = 'android';
         $device->user_id='testID';
-        $device->deviceId='deviceIdForTesting';
+        $device->device_id='deviceIdForTesting';
         $device->save();
 
         $policyLogin = new PolicyLogin;
@@ -135,8 +135,9 @@ class PolicyLoginTest extends TestCase
     public function testIsDeviceExistTrue()
     {
         $device = new Device();
+        $device->platform = 'android';
         $device->user_id='testID';
-        $device->deviceId='deviceIdForTesting';
+        $device->device_id='deviceIdForTesting';
         $device->save();
 
         $policyLogin = new PolicyLogin;
@@ -147,111 +148,5 @@ class PolicyLoginTest extends TestCase
     {
         $policyLogin = new PolicyLogin;
         $this->assertEquals($policyLogin->isDeviceExistWithUser('deviceIdForTesting','testID'),false);
-    }
-
-
-    public function testIsDeviceUsedBeforeTrue()
-    {
-        $user = new User();
-        $user->name = 'userIdForTesting';
-        $user->device = 'android';
-        $user->save();
-
-        $device = new Device();
-        $device->user_id=$user->id;
-        $device->deviceId='deviceIdForTesting';
-        $device->save();
-
-
-        $policyLogin = new PolicyLogin;
-        $this->assertEquals($policyLogin->isDeviceUsedBefore('userIdForTesting','deviceIdForTesting'),true);
-    }
-
-    public function testIsDeviceUsedBeforeFalse()
-    {
-        $user = new User();
-        $user->name = 'userIdForTesting';
-        $user->device = 'android';
-        $user->save();
-
-        $policyLogin = new PolicyLogin;
-        $this->assertEquals($policyLogin->isDeviceUsedBefore('userIdForTesting','deviceIdForTesting'),false);
-    }
-
-
-    public function testIsUserHasMoreThanTwoDevices()
-    {
-        $user = new User();
-        $user->name = 'userIdForTesting';
-        $user->device = 'android';
-        $user->save();
-
-        $device = new Device();
-        $device->user_id=$user->id;
-        $device->deviceId='deviceIdForTesting';
-        $device->save();
-
-
-        $device = new Device();
-        $device->user_id=$user->id;
-        $device->deviceId='deviceIdForTesting2';
-        $device->save();
-
-        $device = new Device();
-        $device->user_id=$user->id;
-        $device->deviceId='deviceIdForTesting3';
-        $device->save();
-
-        $device = new Device();
-        $device->user_id=$user->id;
-        $device->deviceId='deviceIdForTesting4';
-        $device->save();
-
-        $policyLogin = new PolicyLogin;
-        $this->assertEquals($policyLogin->isUserHasMoreThanTwoDevices('userIdForTesting'),true);
-    }
-
-    public function testIsUserHasMoreThanTwoDevices2()
-    {
-        $user = new User();
-        $user->name = 'userIdForTesting';
-        $user->device = 'android';
-        $user->save();
-
-        $device = new Device();
-        $device->user_id=$user->id;
-        $device->deviceId='deviceIdForTesting';
-        $device->save();
-
-
-        $policyLogin = new PolicyLogin;
-        $this->assertEquals($policyLogin->isUserHasMoreThanTwoDevices('userIdForTesting'),false);
-    }
-
-    public function testIsUserHasMoreThanTwoDevices3()
-    {
-        $user = new User();
-        $user->name = 'userIdForTesting';
-        $user->device = 'android';
-        $user->save();
-
-        $device = new Device();
-        $device->user_id=$user->id;
-        $device->deviceId='deviceIdForTesting';
-        $device->save();
-
-        $device = new Device();
-        $device->user_id=$user->id;
-        $device->deviceId='deviceIdForTesting2';
-        $device->save();
-
-        $device = new Device();
-        $device->user_id=$user->id;
-        $device->deviceId='deviceIdForTesting3';
-        $device->save();
-
-
-        $policyLogin = new PolicyLogin;
-        $this->assertEquals($policyLogin->isUserHasMoreThanTwoDevices('userIdForTesting'),true);
     }
 }
