@@ -89,10 +89,20 @@ class PolicyLogin
         return false;
     }
 
+    public function isUserReachLimitDevice($user_id){
+        $device_limit = 2;
+        if($device = Device::where(['user_id'=>$user_id, 'is_banned'=>false])->count()<=2){
+            return false;
+        }else{
+            return true;
+        }
+    }
+
     /**
      * Login checking : One Users can only have two devices/ reject if have more than that
      * check device if has a record in users
      * once a deivce login and success, it stores to database table users
+     * Note :  the banned device is strored in devices table
      **/
 
     public function isLoginValid($userId,$deviceId,$userIdTable){
@@ -144,8 +154,24 @@ class PolicyLogin
 
     }
 
-    public function isLoginValid2(){
-        //retrive user or create new one if doesnt exist
+
+    /*
+     * using different algorithm 
+     * device this algorithm will not save the banned device,
+     * checking the current device that user used in the device table
+     *
+     * ===== Question ======
+     * a function must do only 1 job and only one job
+     * below we can separate some line and create function that 
+     * 1. will return the device
+     * 2. checking if the user has reach limit device
+     * 3.  checking if device is banned or not
+     */
+    public function isLoginValid2($user_id,$device_id){
+
+        $deviceLimit = 2;
+
+        //retrive device or create new one if doesnt exist
         $params = [
             'user_id' => $request->userId,
             'deviceId' => $request->deviceId
@@ -154,45 +180,49 @@ class PolicyLogin
 
         if (!$device) {
 
-            // check if not exceed limit (with active status)
-            if (Device::where(['user_id', $request->userId, 'is_banned' => false])->count() == $deviceLimit) {
-                return $response->json([
-                    'Error'=>array(
-                        "Type"=>"Error",
-                        "Code"=>401,
-                        "Message"=>"Your account is has reached device limit"
-                    ),
-                    'Data'=>null], 401);
+            // check if not exceed limit  
+            if (Device::where(['user_id', $request->userId, 'is_banned' => false])->count() <= $deviceLimit) {
+                return true;
+            }else{
+                // the device is above llmit
+                return false;
             }
 
-            // if not create user with active status
-            $device = new Device();
-            $device->user_id= $request->userId;
-            $device->platform= $request->platform;
-            $device->is_banned = false;
-            $device->deviceId = $request->deviceId;
-            $device->save();
-        }
-        else {
+        }else {
             // check if banned
             if ($device->is_banned) {
-                return $response->json([
-                    'Error'=>array(
-                        "Type"=>"Error",
-                        "Code"=>401,
-                        "Message"=>"Your account is has been disabled"
-                    ),
-                    'Data'=>null], 401);
+                // the device is banned user is not pemmitted to login
+                return false;
+            }else{
+                return true;
             }
         }
 
-        // return success message
-        return $response->json([
-            'Error'=>null,
-            'Data'=>array(
-                'AuthToken' => $token,
-                'InactiveTimeout' => 20
-            )], 200);
+    }
+
+
+    /*
+     * isLoginValid2Refactored sepaarate some line so we can test it,
+     * and the function will do 1 job onlye
+     *
+     */
+    public function isLoginValid2Refactored($user_id,$device_id){
+        if($this->isDeviceExistWithUser($user_id,$device_id)){
+            //device is exist check if its banned
+            if($this->isDeviceBanned($device_id)){
+                return false;
+            }else{
+                return true;
+            }
+        }else{
+            //device is not exits check device limit
+            if($this->isUserReachLimitDevice($user_id)){
+                //user reach limit device 
+                return false;
+            }else{
+                return true;
+            }
+        }
     }
 
 }
