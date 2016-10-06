@@ -9,4 +9,4 @@ I share this code to shows to others how I code and get things done, and I'm ope
 
 
 ## Framework
-The <a href="https://laravel.com/" target="_blank">Laravel</a> framework is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT).
+The <a target="_blank" href="https://laravel.com/">Laravel</a> framework is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT).
