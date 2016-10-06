@@ -9,4 +9,4 @@ I share this code to shows to others how I code and get things done, and I'm ope
 
 
 ## Framework
-The Laravel framework is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT).
+The <a href="https://laravel.com/">Laravel</a> framework is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT).
