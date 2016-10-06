@@ -55,9 +55,9 @@ class PolicyLogin
 
     }
 
-    public function isDeviceExistWithUser($device_id,$userId)
+    public function isDeviceExistWithUser($device_id,$user_id)
     {
-        $device = Device::where(['device_id'=>$device_id,'user_id'=>$userId])->first();
+        $device = Device::where(['device_id'=>$device_id,'user_id'=>$user_id])->first();
         if($device){
             return true;
         }else{
@@ -105,22 +105,22 @@ class PolicyLogin
      * Note :  the banned device is strored in devices table
      **/
 
-    public function isLoginValid($userId,$device_id,$userIdTable){
-        if($policyLogin->hasUserLoginToTwoDevices($userId,$device_id)){
-            if($policyLogin->isDeviceUsedBefore($userId,$device_id)){
+    public function isLoginValid($user_id,$device_id){
+        if($policyLogin->hasUserLoginToTwoDevices($user_id,$device_id)){
+            if($policyLogin->isDeviceUsedBefore($user_id,$device_id)){
                 // return ok response device not banned
                 return true;
             }else{
                 //save the device with banned status
-                $policyLogin->bannedDevice($userId,$device_id);
+                $policyLogin->bannedDevice($user_id,$device_id);
 
                 // return not ok response device banned
                 return false;
 
             }
-        }elseif($policyLogin->isUserHasMoreThanTwoDevices($userId,$device_id)){
-            if(!$policyLogin->isDeviceExistWithUser($device_id,$userIdTable)){
-                $policyLogin->bannedDevice($userId,$device_id);
+        }elseif($policyLogin->isUserHasMoreThanTwoDevices($user_id,$device_id)){
+            if(!$policyLogin->isDeviceExistWithUser($device_id,$user_id)){
+                $policyLogin->bannedDevice($user_id,$device_id);
 
                 // return not ok response device banned
                 return false;
@@ -139,11 +139,11 @@ class PolicyLogin
 
         }else{
 
-            if(!$policyLogin->isDeviceExistWithUser($device_id,$userIdTable)){
+            if(!$policyLogin->isDeviceExistWithUser($device_id,$user_id)){
                 //create new device if not Exist
                 $device = new Device();
                 $device->device_id = $device_id;
-                $device->user_id =$userIdTable;
+                $device->user_id =$user_id;
                 $device->save();
             }
 
@@ -173,7 +173,7 @@ class PolicyLogin
 
         //retrive device or create new one if doesnt exist
         $params = [
-            'user_id' => $userId,
+            'user_id' => $user_id,
             'device_id' => $device_id
         ];
         
@@ -182,7 +182,7 @@ class PolicyLogin
         if (!$device) {
 
             // check if not exceed limit  
-            if (Device::where(['user_id', $request->userId, 'is_banned' => false])->count() <= $deviceLimit) {
+            if (Device::where(['user_id'=>$user_id, 'is_banned'=>false])->count() <= $deviceLimit) {
                 return true;
             }else{
                 // the device is above llmit
