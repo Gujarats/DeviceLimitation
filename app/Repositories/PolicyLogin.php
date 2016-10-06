@@ -65,11 +65,12 @@ class PolicyLogin
         }
     }
 
-    public function bannedDevice($user_id,$device_id)
+    public function bannedDevice($user_id,$device_id,$platform)
     {
         $user = User::where(['name'=>$user_id])->first();
         $device = new Device();
         $device->user_id = $user->id;
+        $device->platform = $platform;
         $device->device_id = $device_id;
         $device->is_banned = true;
         $device->save();
@@ -106,32 +107,32 @@ class PolicyLogin
      **/
 
     public function isLoginValid($user_id,$device_id){
-        if($policyLogin->hasUserLoginToTwoDevices($user_id,$device_id)){
-            if($policyLogin->isDeviceUsedBefore($user_id,$device_id)){
-                // return ok response device not banned
+        if($this->hasUserLoginToTwoDevices($user_id,$device_id)){
+            if($this->isDeviceUsedBefore($user_id,$device_id)){
+                // return ok response 
                 return true;
             }else{
                 //save the device with banned status
-                $policyLogin->bannedDevice($user_id,$device_id);
+                $this->bannedDevice($user_id,$device_id,$platform);
 
-                // return not ok response device banned
+                // return not ok 
                 return false;
 
             }
-        }elseif($policyLogin->isUserHasMoreThanTwoDevices($user_id,$device_id)){
-            if(!$policyLogin->isDeviceExistWithUser($device_id,$user_id)){
-                $policyLogin->bannedDevice($user_id,$device_id);
+        }elseif($this->isUserHasMoreThanTwoDevices($user_id,$device_id)){
+            if(!$this->isDeviceExistWithUser($device_id,$user_id)){
+                $this->bannedDevice($user_id,$device_id);
 
-                // return not ok response device banned
+                // return not ok 
                 return false;
 
             }else{
                 //check device is banned or not
-                if(!$policyLogin->isDeviceBanned($device_id)){
-                    // return ok response device not banned
+                if(!$this->isDeviceBanned($device_id)){
+                    // return ok 
                     return true;
                 }else{
-                    // return not ok response device banned
+                    // return not ok 
                     return false;
                 }
             }
@@ -139,7 +140,7 @@ class PolicyLogin
 
         }else{
 
-            if(!$policyLogin->isDeviceExistWithUser($device_id,$user_id)){
+            if(!$this->isDeviceExistWithUser($device_id,$user_id)){
                 //create new device if not Exist
                 $device = new Device();
                 $device->device_id = $device_id;
@@ -204,7 +205,7 @@ class PolicyLogin
 
     /*
      * isLoginValid2Refactored sepaarate some line so we can test it,
-     * and the function will do 1 job onlye
+     * and the function will do 1 job only 
      *
      */
     public function isLoginValid2Refactored($user_id,$device_id){
