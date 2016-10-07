@@ -227,4 +227,10 @@ class PolicyLogin
         }
     }
 
+    public function isLoginValid2Refactored2($user_id,$device_id){
+        return $this->isDeviceExistWithUser($user_id, $device_id) ?
+            !$this->isDeviceBanned($device_id) :
+            !$this->isUserReachLimitDevice($user_id); 
+    }
+
 }
